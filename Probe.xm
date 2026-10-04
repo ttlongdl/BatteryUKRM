@@ -117,7 +117,7 @@ static void BUKDumpRuntime(BOOL batteryPhase) {
     NSDateFormatter *df = [NSDateFormatter new];
     df.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     BUKWrite(@"============================================================");
-    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug9 phase=%@ pid=%d time=%@",
+    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug10 phase=%@ pid=%d time=%@",
               batteryPhase ? @"BATTERY_LOADED" : @"INITIAL", getpid(), [df stringFromDate:[NSDate date]]]);
     BUKWrite([NSString stringWithFormat:@"SystemHealthUI=%@ PLBatteryUIBackendModel=%@",
               sh ? @"YES" : @"NO", backend ? @"YES" : @"NO"]);
@@ -260,6 +260,40 @@ static id BUK_BUI_specifiers(id self, SEL _cmd) {
     return result;
 }
 
+static void BUKProbeIOKitCycle(void) {
+    void *h = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_LAZY);
+    if (!h) { BUKWrite(@"DEBUG10 IOKit dlopen failed"); return; }
+
+    typedef void *(*MatchingFn)(const char *);
+    typedef unsigned int (*GetServiceFn)(unsigned int, void *);
+    typedef const void *(*CreatePropFn)(unsigned int, const void *, const void *, unsigned int);
+    typedef int (*ReleaseFn)(unsigned int);
+
+    MatchingFn matching = (MatchingFn)dlsym(h, "IOServiceMatching");
+    GetServiceFn getService = (GetServiceFn)dlsym(h, "IOServiceGetMatchingService");
+    CreatePropFn createProp = (CreatePropFn)dlsym(h, "IORegistryEntryCreateCFProperty");
+    ReleaseFn releaseObj = (ReleaseFn)dlsym(h, "IOObjectRelease");
+
+    if (!matching || !getService || !createProp) {
+        BUKWrite(@"DEBUG10 IOKit symbols unavailable");
+        dlclose(h);
+        return;
+    }
+
+    unsigned int service = getService(0, matching("AppleSmartBattery"));
+    if (!service) {
+        BUKWrite(@"DEBUG10 AppleSmartBattery service unavailable");
+        dlclose(h);
+        return;
+    }
+
+    CFTypeRef value = (CFTypeRef)createProp(service, CFSTR("CycleCount"), kCFAllocatorDefault, 0);
+    BUKWrite([NSString stringWithFormat:@"DEBUG10 IOKIT CycleCount=%@", (__bridge id)value]);
+    if (value) CFRelease(value);
+    if (releaseObj) releaseObj(service);
+    dlclose(h);
+}
+
 static void BUKInstallBatteryHealthHooks(void) {
     if (gDidHookBatteryHealth) return;
     Class cls = NSClassFromString(@"BatteryHealthUIController");
@@ -319,6 +353,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     BUKLogMGSymbol();
                     BUKInstallBatteryHealthHooks();
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ BUKProbeIOKitCycle(); });
                     BUKDumpRuntime(YES);
 
                 });
