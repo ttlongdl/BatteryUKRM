@@ -9,6 +9,9 @@
 static NSString *const kLogPath = @"/var/mobile/BatteryUKRM-probe.log";
 static BOOL gDidInitialDump = NO;
 static BOOL gDidBatteryDump = NO;
+static IMP gOrigBHSpecifiers = NULL;
+static IMP gOrigGetChargeCycles = NULL;
+static BOOL gDidHookBatteryHealth = NO;
 
 static void BUKWrite(NSString *line) {
     NSString *msg = [NSString stringWithFormat:@"%@\n", line ?: @""];
@@ -119,6 +122,70 @@ static void BUKDumpRuntime(BOOL batteryPhase) {
     BUKWrite(@"END PROBE");
 }
 
+
+static NSString *BUKSafeValue(id obj, NSString *key) {
+    @try {
+        id v = [obj valueForKey:key];
+        return v ? [v description] : @"(nil)";
+    } @catch (__unused NSException *e) {
+        return @"(KVC unavailable)";
+    }
+}
+
+static id BUK_BH_specifiers(id self, SEL _cmd) {
+    id (*orig)(id, SEL) = (id (*)(id, SEL))gOrigBHSpecifiers;
+    id result = orig ? orig(self, _cmd) : nil;
+    BUKWrite([NSString stringWithFormat:@"HOOK BatteryHealthUIController specifiers -> %@ count=%lu",
+              NSStringFromClass([result class]),
+              (unsigned long)([result respondsToSelector:@selector(count)] ? [result count] : 0)]);
+    if ([result isKindOfClass:[NSArray class]]) {
+        NSUInteger i = 0;
+        for (id sp in (NSArray *)result) {
+            BUKWrite([NSString stringWithFormat:@"  SPEC[%lu] class=%@ name=%@ identifier=%@ id=%@ key=%@ getter=%@ cellType=%@",
+                      (unsigned long)i++,
+                      NSStringFromClass([sp class]),
+                      BUKSafeValue(sp, @"name"),
+                      BUKSafeValue(sp, @"identifier"),
+                      BUKSafeValue(sp, @"id"),
+                      BUKSafeValue(sp, @"key"),
+                      BUKSafeValue(sp, @"getter"),
+                      BUKSafeValue(sp, @"cellType")]);
+        }
+    }
+    return result;
+}
+
+static id BUK_BH_getChargeCycles(id self, SEL _cmd, id specifier) {
+    id (*orig)(id, SEL, id) = (id (*)(id, SEL, id))gOrigGetChargeCycles;
+    id result = orig ? orig(self, _cmd, specifier) : nil;
+    BUKWrite([NSString stringWithFormat:@"HOOK getChargeCycles: specifier=%@ name=%@ identifier=%@ -> %@",
+              specifier, BUKSafeValue(specifier, @"name"),
+              BUKSafeValue(specifier, @"identifier"), result]);
+    return result;
+}
+
+static void BUKInstallBatteryHealthHooks(void) {
+    if (gDidHookBatteryHealth) return;
+    Class cls = NSClassFromString(@"BatteryHealthUIController");
+    if (!cls) {
+        BUKWrite(@"HOOK BatteryHealthUIController unavailable");
+        return;
+    }
+    Method m = class_getInstanceMethod(cls, @selector(specifiers));
+    Method c = class_getInstanceMethod(cls, @selector(getChargeCycles:));
+    if (m) {
+        gOrigBHSpecifiers = method_getImplementation(m);
+        method_setImplementation(m, (IMP)BUK_BH_specifiers);
+    }
+    if (c) {
+        gOrigGetChargeCycles = method_getImplementation(c);
+        method_setImplementation(c, (IMP)BUK_BH_getChargeCycles);
+    }
+    gDidHookBatteryHealth = (m || c);
+    BUKWrite([NSString stringWithFormat:@"HOOK INSTALL BatteryHealthUIController specifiers=%@ getChargeCycles=%@",
+              m ? @"YES" : @"NO", c ? @"YES" : @"NO"]);
+}
+
 static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
     @autoreleasepool {
         Dl_info info = {0};
@@ -128,6 +195,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
                 BUKWrite([NSString stringWithFormat:@"IMAGE LOADED %s slide=%p", info.dli_fname, (void *)slide]);
                 dispatch_async(dispatch_get_main_queue(), ^{
                     BUKLogMGSymbol();
+                    BUKInstallBatteryHealthHooks();
                     BUKDumpRuntime(YES);
                 });
             }
