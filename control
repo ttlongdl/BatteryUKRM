@@ -1,6 +1,6 @@
 Package: com.ttlongdl.batteryukrmprobe
 Name: BatteryUKRM Probe
-Version: 1.0.2-debug14
+Version: 1.0.2-debug15
 Architecture: iphoneos-arm64
 Description: Runtime probe for BatteryUKRM development. Logs BatteryUsageUI Objective-C classes and selectors without modifying battery values.
 Maintainer: ttlongdl
