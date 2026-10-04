@@ -1,6 +1,9 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
-#import <mach-o/dyld.h>\n#import <dlfcn.h>\n#import <unistd.h>\n#import <dispatch/dispatch.h>
+#import <mach-o/dyld.h>
+#import <dlfcn.h>
+#import <unistd.h>
+#import <dispatch/dispatch.h>
 
 static NSString *const kLogPath = @"/var/mobile/BatteryUKRM-probe.log";
 static BOOL gDidDump = NO;
