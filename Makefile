@@ -8,6 +8,5 @@ TWEAK_NAME = BatteryUKRMProbe
 BatteryUKRMProbe_FILES = Probe.xm
 BatteryUKRMProbe_CFLAGS = -fobjc-arc
 BatteryUKRMProbe_FRAMEWORKS = Foundation
-BatteryUKRMProbe_PRIVATE_FRAMEWORKS = Preferences
 
 include $(THEOS_MAKE_PATH)/tweak.mk
