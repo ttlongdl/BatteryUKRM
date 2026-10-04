@@ -47,51 +47,39 @@ static NSNumber *BUKRealCycleCount(void) {
 static id BUKCycleValue(id self, SEL _cmd, id specifier) {
     NSNumber *n = BUKRealCycleCount();
     NSString *v = n ? [n stringValue] : @"--";
-    BUKWrite([NSString stringWithFormat:@"DEBUG12 Cycle row value=%@", v]);
+    BUKWrite([NSString stringWithFormat:@"DEBUG13 Cycle row value=%@", v]);
     return v;
 }
 
 static id BUKMakeCycleSpecifier(id target, NSArray *existing) {
-    id templateSpecifier = nil;
-    for (id sp in existing) {
-        NSString *name = nil;
-        @try { name = [[sp valueForKey:@"name"] description]; } @catch (__unused NSException *e) {}
-        if ([name containsString:@"Dung lượng tối đa"] || [name containsString:@"Maximum Capacity"]) {
-            templateSpecifier = sp;
-            break;
-        }
-    }
-    if (!templateSpecifier) {
-        BUKWrite(@"DEBUG12 Maximum Capacity templateSpecifier not found");
-        return nil;
-    }
-
-    id sp = [templateSpecifier copy];
-    @try {
-        if ([sp respondsToSelector:@selector(setName:)])
-            [sp performSelector:@selector(setName:) withObject:@"Số chu kỳ"];
-        else
-            [sp setValue:@"Số chu kỳ" forKey:@"name"];
-
-        if ([sp respondsToSelector:@selector(setGetter:)]) {
-            NSMethodSignature *sig = [sp methodSignatureForSelector:@selector(setGetter:)];
-            if (sig) {
-                NSInvocation *inv = [NSInvocation invocationWithMethodSignature:sig];
-                SEL setGetter = @selector(setGetter:);
-                SEL getter = @selector(buk_realCycleCount:);
-                [inv setSelector:setGetter]; [inv setTarget:sp];
-                [inv setArgument:&getter atIndex:2]; [inv invoke];
+    NSInteger cellType = 4;
+    for (id candidate in existing) {
+        @try {
+            NSString *name = [[candidate valueForKey:@"name"] description];
+            if ([name containsString:@"Dung lượng tối đa"] || [name containsString:@"Maximum Capacity"]) {
+                id ct = [candidate valueForKey:@"cellType"];
+                if ([ct respondsToSelector:@selector(integerValue)]) cellType = [ct integerValue];
+                BUKWrite([NSString stringWithFormat:@"DEBUG13 template cellType=%ld", (long)cellType]);
+                break;
             }
-        }
-        if ([sp respondsToSelector:@selector(setProperty:forKey:)]) {
-            [sp performSelector:@selector(setProperty:forKey:) withObject:@"BatteryUKRMRealCycleCount" withObject:@"id"];
-            [sp performSelector:@selector(setProperty:forKey:) withObject:@"BatteryUKRMRealCycleCount" withObject:@"key"];
-        }
-    } @catch (NSException *e) {
-        BUKWrite([NSString stringWithFormat:@"DEBUG12 templateSpecifier configure exception=%@", e.name]);
+        } @catch (__unused NSException *e) {}
+    }
+
+    Class PS = NSClassFromString(@"PSSpecifier");
+    SEL factory = NSSelectorFromString(@"preferenceSpecifierNamed:target:set:get:detail:cell:edit:");
+    if (!PS || ![PS respondsToSelector:factory]) {
+        BUKWrite(@"DEBUG13 PSSpecifier factory unavailable");
         return nil;
     }
-    BUKWrite(@"DEBUG12 cloned Maximum Capacity specifier");
+
+    typedef id (*FactoryFn)(id, SEL, id, id, SEL, SEL, Class, NSInteger, Class);
+    FactoryFn make = (FactoryFn)[PS methodForSelector:factory];
+    id sp = make(PS, factory, @"Số chu kỳ", target, NULL, @selector(buk_realCycleCount:), Nil, cellType, Nil);
+    if (sp && [sp respondsToSelector:@selector(setProperty:forKey:)]) {
+        [sp performSelector:@selector(setProperty:forKey:) withObject:@"BatteryUKRMRealCycleCount" withObject:@"id"];
+        [sp performSelector:@selector(setProperty:forKey:) withObject:@"BatteryUKRMRealCycleCount" withObject:@"key"];
+    }
+    BUKWrite([NSString stringWithFormat:@"DEBUG13 created specifier=%@ cellType=%ld", sp, (long)cellType]);
     return sp;
 }
 
@@ -116,7 +104,7 @@ static id BUK_BH_specifiers(id self, SEL _cmd) {
         id sp = BUKMakeCycleSpecifier(self, out);
         if (sp) {
             [out addObject:sp];
-            BUKWrite([NSString stringWithFormat:@"DEBUG12 inserted real CycleCount=%@", cycle]);
+            BUKWrite([NSString stringWithFormat:@"DEBUG13 inserted real CycleCount=%@", cycle]);
         }
     }
     return out;
@@ -126,13 +114,13 @@ static void BUKInstall(void) {
     if (gDidHook) return;
     Class cls = NSClassFromString(@"BatteryHealthUIController");
     Method m = cls ? class_getInstanceMethod(cls, @selector(specifiers)) : NULL;
-    if (!m) { BUKWrite(@"DEBUG12 BatteryHealthUIController/specifiers unavailable"); return; }
+    if (!m) { BUKWrite(@"DEBUG13 BatteryHealthUIController/specifiers unavailable"); return; }
 
     class_addMethod(cls, @selector(buk_realCycleCount:), (IMP)BUKCycleValue, "@@:@");
     gOrigBHSpecifiers = method_getImplementation(m);
     method_setImplementation(m, (IMP)BUK_BH_specifiers);
     gDidHook = YES;
-    BUKWrite(@"DEBUG12 BatteryHealthUIController hook installed");
+    BUKWrite(@"DEBUG13 BatteryHealthUIController hook installed");
 }
 
 static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
@@ -150,7 +138,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
 %ctor {
     @autoreleasepool {
         [[NSFileManager defaultManager] removeItemAtPath:kLogPath error:nil];
-        BUKWrite(@"BatteryUKRM Probe debug12 loaded");
+        BUKWrite(@"BatteryUKRM Probe debug13 loaded");
         _dyld_register_func_for_add_image(BUKImageAdded);
     }
 }
