@@ -32,7 +32,7 @@ jobs:
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
-          name: BatteryUKRM-1.0.2-debug1
+          name: BatteryUKRM-1.0.2-debug2
           path: packages/*.deb
           if-no-files-found: error
           retention-days: 3
