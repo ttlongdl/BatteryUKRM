@@ -47,7 +47,7 @@ static NSNumber *BUKRealCycleCount(void) {
 static id BUKCycleValue(id self, SEL _cmd, id specifier) {
     NSNumber *n = BUKRealCycleCount();
     NSString *v = n ? [n stringValue] : @"--";
-    BUKWrite([NSString stringWithFormat:@"DEBUG18 Cycle row value=%@", v]);
+    BUKWrite([NSString stringWithFormat:@"DEBUG19 Cycle row value=%@", v]);
     return v;
 }
 
@@ -59,7 +59,7 @@ static id BUKMakeCycleSpecifier(id target, NSArray *existing) {
             if ([name containsString:@"Dung lượng tối đa"] || [name containsString:@"Maximum Capacity"]) {
                 id ct = [candidate valueForKey:@"cellType"];
                 if ([ct respondsToSelector:@selector(integerValue)]) cellType = [ct integerValue];
-                BUKWrite([NSString stringWithFormat:@"DEBUG18 template cellType=%ld", (long)cellType]);
+                BUKWrite([NSString stringWithFormat:@"DEBUG19 template cellType=%ld", (long)cellType]);
                 break;
             }
         } @catch (__unused NSException *e) {}
@@ -68,7 +68,7 @@ static id BUKMakeCycleSpecifier(id target, NSArray *existing) {
     Class PS = NSClassFromString(@"PSSpecifier");
     SEL factory = NSSelectorFromString(@"preferenceSpecifierNamed:target:set:get:detail:cell:edit:");
     if (!PS || ![PS respondsToSelector:factory]) {
-        BUKWrite(@"DEBUG18 PSSpecifier factory unavailable");
+        BUKWrite(@"DEBUG19 PSSpecifier factory unavailable");
         return nil;
     }
 
@@ -79,7 +79,7 @@ static id BUKMakeCycleSpecifier(id target, NSArray *existing) {
         [sp performSelector:@selector(setProperty:forKey:) withObject:@"BatteryUKRMRealCycleCount" withObject:@"id"];
         [sp performSelector:@selector(setProperty:forKey:) withObject:@"BatteryUKRMRealCycleCount" withObject:@"key"];
     }
-    BUKWrite([NSString stringWithFormat:@"DEBUG18 created specifier=%@ cellType=%ld", sp, (long)cellType]);
+    BUKWrite([NSString stringWithFormat:@"DEBUG19 created specifier=%@ cellType=%ld", sp, (long)cellType]);
     return sp;
 }
 
@@ -148,11 +148,12 @@ static id BUK_BH_specifiers(id self, SEL _cmd) {
                     : @"This is the number of times iPhone has used your battery’s capacity.";
                 if ([groupAfter respondsToSelector:@selector(setProperty:forKey:)]) {
                     [groupAfter performSelector:@selector(setProperty:forKey:) withObject:footer withObject:@"footerText"];
+                    [groupAfter performSelector:@selector(setProperty:forKey:) withObject:@(-16.0) withObject:@"footerTopPadding"];
                 }
                 [out insertObject:groupAfter atIndex:insertIndex + 1];
             }
 
-            BUKWrite([NSString stringWithFormat:@"DEBUG18 inserted CycleCount=%@ before peak-group boundary index=%lu groups=%@/%@",
+            BUKWrite([NSString stringWithFormat:@"DEBUG19 inserted CycleCount=%@ before peak-group boundary index=%lu groups=%@/%@",
                       cycle, (unsigned long)insertIndex,
                       groupBefore ? @"YES" : @"NO", groupAfter ? @"YES" : @"NO"]);
 
@@ -160,12 +161,12 @@ static id BUK_BH_specifiers(id self, SEL _cmd) {
                 Ivar iv = class_getInstanceVariable([self class], "_specifiers");
                 if (iv) {
                     object_setIvar(self, iv, out);
-                    BUKWrite(@"DEBUG18 replaced _specifiers ivar");
+                    BUKWrite(@"DEBUG19 replaced _specifiers ivar");
                 } else {
-                    BUKWrite(@"DEBUG18 _specifiers ivar not found");
+                    BUKWrite(@"DEBUG19 _specifiers ivar not found");
                 }
             } @catch (NSException *e) {
-                BUKWrite([NSString stringWithFormat:@"DEBUG18 _specifiers exception=%@", e.name]);
+                BUKWrite([NSString stringWithFormat:@"DEBUG19 _specifiers exception=%@", e.name]);
             }
         }
     }
@@ -176,13 +177,13 @@ static void BUKInstall(void) {
     if (gDidHook) return;
     Class cls = NSClassFromString(@"BatteryHealthUIController");
     Method m = cls ? class_getInstanceMethod(cls, @selector(specifiers)) : NULL;
-    if (!m) { BUKWrite(@"DEBUG18 BatteryHealthUIController/specifiers unavailable"); return; }
+    if (!m) { BUKWrite(@"DEBUG19 BatteryHealthUIController/specifiers unavailable"); return; }
 
     class_addMethod(cls, @selector(buk_realCycleCount:), (IMP)BUKCycleValue, "@@:@");
     gOrigBHSpecifiers = method_getImplementation(m);
     method_setImplementation(m, (IMP)BUK_BH_specifiers);
     gDidHook = YES;
-    BUKWrite(@"DEBUG18 BatteryHealthUIController hook installed");
+    BUKWrite(@"DEBUG19 BatteryHealthUIController hook installed");
 }
 
 static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
@@ -200,7 +201,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
 %ctor {
     @autoreleasepool {
         [[NSFileManager defaultManager] removeItemAtPath:kLogPath error:nil];
-        BUKWrite(@"BatteryUKRM Probe debug18 loaded");
+        BUKWrite(@"BatteryUKRM Probe debug19 loaded");
         _dyld_register_func_for_add_image(BUKImageAdded);
     }
 }
