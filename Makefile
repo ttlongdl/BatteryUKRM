@@ -4,9 +4,9 @@ THEOS_PACKAGE_SCHEME = rootless
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = BatteryUKRMProbe
-BatteryUKRMProbe_FILES = Probe.xm
-BatteryUKRMProbe_CFLAGS = -fobjc-arc
-BatteryUKRMProbe_FRAMEWORKS = Foundation
+TWEAK_NAME = BatteryUKRM
+BatteryUKRM_FILES = Tweak.xm
+BatteryUKRM_CFLAGS = -fobjc-arc
+BatteryUKRM_FRAMEWORKS = Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk

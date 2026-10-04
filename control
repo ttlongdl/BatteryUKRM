@@ -1,8 +1,8 @@
-Package: com.ttlongdl.batteryukrmprobe
-Name: BatteryUKRM Probe
-Version: 1.0.2-debug21
+Package: com.ttlongdl.batteryukrm
+Name: BatteryUKRM
+Version: 1.0.2
 Architecture: iphoneos-arm64
-Description: Runtime probe for BatteryUKRM development. Logs BatteryUsageUI Objective-C classes and selectors without modifying battery values.
+Description: Hides Apple repair warnings, restores the native Battery Health display for replaced batteries, and shows the real battery cycle count.
 Maintainer: ttlongdl
 Author: ttlongdl
 Section: Tweaks
