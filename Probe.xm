@@ -5,7 +5,6 @@
 #import <unistd.h>
 #import <dispatch/dispatch.h>
 #import <execinfo.h>
-#import <substrate.h>
 
 static NSString *const kLogPath = @"/var/mobile/BatteryUKRM-probe.log";
 static BOOL gDidInitialDump = NO;
@@ -53,46 +52,22 @@ static void BUKDumpClass(Class cls, BOOL allMethods) {
     free(methods);
 }
 
-typedef BOOL (*MGIsDeviceOneOfTypeFn)(CFTypeRef);
-static MGIsDeviceOneOfTypeFn orig_MGIsDeviceOneOfType = NULL;
-
-static BOOL hook_MGIsDeviceOneOfType(CFTypeRef type) {
-    BOOL result = orig_MGIsDeviceOneOfType ? orig_MGIsDeviceOneOfType(type) : NO;
-    @autoreleasepool {
-        NSString *arg = type ? [(__bridge id)type description] : @"(null)";
-        void *ra = __builtin_return_address(0);
-        Dl_info info = {0};
-        NSString *caller = @"(unknown)";
-        if (ra && dladdr(ra, &info) && info.dli_fname) {
-            caller = [NSString stringWithFormat:@"%s + 0x%llx",
-                      info.dli_fname,
-                      (unsigned long long)((uintptr_t)ra - (uintptr_t)info.dli_fbase)];
-        }
-        BUKWrite([NSString stringWithFormat:@"MG CALL type=%@ result=%@ caller=%@",
-                  arg, result ? @"YES" : @"NO", caller]);
-    }
-    return result;
-}
-
-static void BUKTryHookMG(void) {
-    if (gMGHookAttempted) return;
-    gMGHookAttempted = YES;
-
+static void BUKLogMGSymbol(void) {
     void *sym = dlsym(RTLD_DEFAULT, "_MGIsDeviceOneOfType");
     if (!sym) sym = dlsym(RTLD_DEFAULT, "MGIsDeviceOneOfType");
-
     if (!sym) {
-        BUKWrite(@"MG HOOK symbol NOT FOUND");
+        BUKWrite(@"MG SYMBOL NOT FOUND");
         return;
     }
-
     Dl_info info = {0};
     NSString *where = @"(unknown)";
-    if (dladdr(sym, &info) && info.dli_fname) where = [NSString stringWithUTF8String:info.dli_fname];
-    BUKWrite([NSString stringWithFormat:@"MG HOOK symbol=%p image=%@", sym, where]);
-
-    MSHookFunction(sym, (void *)&hook_MGIsDeviceOneOfType, (void **)&orig_MGIsDeviceOneOfType);
-    BUKWrite([NSString stringWithFormat:@"MG HOOK installed original=%p", orig_MGIsDeviceOneOfType]);
+    unsigned long long offset = 0;
+    if (dladdr(sym, &info) && info.dli_fname) {
+        where = [NSString stringWithUTF8String:info.dli_fname];
+        offset = (unsigned long long)((uintptr_t)sym - (uintptr_t)info.dli_fbase);
+    }
+    BUKWrite([NSString stringWithFormat:@"MG SYMBOL passive=%p image=%@ offset=0x%llx",
+              sym, where, offset]);
 }
 
 static BOOL BUKIsBatteryUsageUIImage(const char *imageName) {
@@ -134,7 +109,7 @@ static void BUKDumpRuntime(BOOL batteryPhase) {
     NSDateFormatter *df = [NSDateFormatter new];
     df.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     BUKWrite(@"============================================================");
-    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug3 phase=%@ pid=%d time=%@",
+    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug4 phase=%@ pid=%d time=%@",
               batteryPhase ? @"BATTERY_LOADED" : @"INITIAL", getpid(), [df stringFromDate:[NSDate date]]]);
     BUKWrite([NSString stringWithFormat:@"SystemHealthUI=%@ PLBatteryUIBackendModel=%@",
               sh ? @"YES" : @"NO", backend ? @"YES" : @"NO"]);
@@ -153,7 +128,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
             if ([path containsString:@"batteryusageui"]) {
                 BUKWrite([NSString stringWithFormat:@"IMAGE LOADED %s slide=%p", info.dli_fname, (void *)slide]);
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    BUKTryHookMG();
+                    BUKLogMGSymbol();
                     BUKDumpRuntime(YES);
                 });
             }
@@ -165,7 +140,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
     @autoreleasepool {
         [[NSFileManager defaultManager] removeItemAtPath:kLogPath error:nil];
         BUKWrite(@"BatteryUKRM Probe loaded into Preferences");
-        BUKTryHookMG();
+        BUKLogMGSymbol();
         _dyld_register_func_for_add_image(BUKImageAdded);
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{ BUKDumpRuntime(NO); });
