@@ -11,6 +11,9 @@ static BOOL gDidInitialDump = NO;
 static BOOL gDidBatteryDump = NO;
 static IMP gOrigBHSpecifiers = NULL;
 static IMP gOrigBUISpecifiers = NULL;
+static IMP gOrigBUIInit = NULL;
+static IMP gOrigBUIViewDidLoad = NULL;
+static IMP gOrigBUIViewWillAppear = NULL;
 static IMP gOrigGetChargeCycles = NULL;
 static IMP gOrigInternalSpecifiers = NULL;
 static BOOL gDidInternalProbe = NO;
@@ -114,7 +117,7 @@ static void BUKDumpRuntime(BOOL batteryPhase) {
     NSDateFormatter *df = [NSDateFormatter new];
     df.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     BUKWrite(@"============================================================");
-    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug8 phase=%@ pid=%d time=%@",
+    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug9 phase=%@ pid=%d time=%@",
               batteryPhase ? @"BATTERY_LOADED" : @"INITIAL", getpid(), [df stringFromDate:[NSDate date]]]);
     BUKWrite([NSString stringWithFormat:@"SystemHealthUI=%@ PLBatteryUIBackendModel=%@",
               sh ? @"YES" : @"NO", backend ? @"YES" : @"NO"]);
@@ -223,6 +226,30 @@ static void BUKProbeInternalOnLiveController(id self) {
     }
 }
 
+static id BUK_BUI_init(id self, SEL _cmd) {
+    id (*orig)(id, SEL) = (id (*)(id, SEL))gOrigBUIInit;
+    id obj = orig ? orig(self, _cmd) : self;
+    BUKWrite([NSString stringWithFormat:@"DEBUG9 BatteryUIController init -> %@", obj]);
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        BUKProbeInternalOnLiveController(obj);
+    });
+    return obj;
+}
+
+static void BUK_BUI_viewDidLoad(id self, SEL _cmd) {
+    void (*orig)(id, SEL) = (void (*)(id, SEL))gOrigBUIViewDidLoad;
+    if (orig) orig(self, _cmd);
+    BUKWrite([NSString stringWithFormat:@"DEBUG9 BatteryUIController viewDidLoad self=%@", self]);
+    BUKProbeInternalOnLiveController(self);
+}
+
+static void BUK_BUI_viewWillAppear(id self, SEL _cmd, BOOL animated) {
+    void (*orig)(id, SEL, BOOL) = (void (*)(id, SEL, BOOL))gOrigBUIViewWillAppear;
+    if (orig) orig(self, _cmd, animated);
+    BUKWrite([NSString stringWithFormat:@"DEBUG9 BatteryUIController viewWillAppear self=%@ animated=%d", self, animated]);
+    BUKProbeInternalOnLiveController(self);
+}
+
 static id BUK_BUI_specifiers(id self, SEL _cmd) {
     id (*orig)(id, SEL) = (id (*)(id, SEL))gOrigBUISpecifiers;
     id result = orig ? orig(self, _cmd) : nil;
@@ -250,6 +277,9 @@ static void BUKInstallBatteryHealthHooks(void) {
     Method c = bui ? class_getInstanceMethod(bui, @selector(getChargeCycles:)) : NULL;
     Method internal = bui ? class_getInstanceMethod(bui, @selector(setUpInternalSpecifiers)) : NULL;
     Method buiSpecs = bui ? class_getInstanceMethod(bui, @selector(specifiers)) : NULL;
+    Method buiInit = bui ? class_getInstanceMethod(bui, @selector(init)) : NULL;
+    Method buiVDL = bui ? class_getInstanceMethod(bui, @selector(viewDidLoad)) : NULL;
+    Method buiVWA = bui ? class_getInstanceMethod(bui, @selector(viewWillAppear:)) : NULL;
     if (c) {
         gOrigGetChargeCycles = method_getImplementation(c);
         method_setImplementation(c, (IMP)BUK_BUI_getChargeCycles);
@@ -262,9 +292,21 @@ static void BUKInstallBatteryHealthHooks(void) {
         gOrigBUISpecifiers = method_getImplementation(buiSpecs);
         method_setImplementation(buiSpecs, (IMP)BUK_BUI_specifiers);
     }
-    gDidHookBatteryHealth = (m || c || internal || buiSpecs);
-    BUKWrite([NSString stringWithFormat:@"HOOK INSTALL BH.specifiers=%@ BUI.getChargeCycles=%@ BUI.internalSpecifiers=%@ BUI.specifiers=%@",
-              m ? @"YES" : @"NO", c ? @"YES" : @"NO", internal ? @"YES" : @"NO", buiSpecs ? @"YES" : @"NO"]);
+    if (buiInit) {
+        gOrigBUIInit = method_getImplementation(buiInit);
+        method_setImplementation(buiInit, (IMP)BUK_BUI_init);
+    }
+    if (buiVDL) {
+        gOrigBUIViewDidLoad = method_getImplementation(buiVDL);
+        method_setImplementation(buiVDL, (IMP)BUK_BUI_viewDidLoad);
+    }
+    if (buiVWA) {
+        gOrigBUIViewWillAppear = method_getImplementation(buiVWA);
+        method_setImplementation(buiVWA, (IMP)BUK_BUI_viewWillAppear);
+    }
+    gDidHookBatteryHealth = (m || c || internal || buiSpecs || buiInit || buiVDL || buiVWA);
+    BUKWrite([NSString stringWithFormat:@"HOOK INSTALL BH.specifiers=%@ BUI.getChargeCycles=%@ BUI.internalSpecifiers=%@ BUI.specifiers=%@ init=%@ viewDidLoad=%@ viewWillAppear=%@",
+              m ? @"YES" : @"NO", c ? @"YES" : @"NO", internal ? @"YES" : @"NO", buiSpecs ? @"YES" : @"NO", buiInit ? @"YES" : @"NO", buiVDL ? @"YES" : @"NO", buiVWA ? @"YES" : @"NO"]);
 }
 
 static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
