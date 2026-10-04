@@ -18,6 +18,12 @@ jobs:
           echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
 
 
+      - name: Install signing tool
+        run: |
+          brew install ldid
+          which ldid
+          ldid -v || true
+
       - name: Build rootless package
         run: |
           make clean package FINALPACKAGE=1
