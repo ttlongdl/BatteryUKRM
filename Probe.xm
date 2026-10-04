@@ -6,7 +6,7 @@
 #import <dispatch/dispatch.h>
 
 static NSString *const kLogPath = @"/var/mobile/BatteryUKRM-probe.log";
-static BOOL gDidDump = NO;
+static BOOL gDidInitialDump = NO;\nstatic BOOL gDidBatteryDump = NO;
 
 static void BUKWrite(NSString *line) {
     NSString *msg = [NSString stringWithFormat:@"%@\n", line ?: @""];
@@ -77,19 +77,22 @@ static void BUKDumpClass(Class cls, BOOL allMethods) {
     free(methods);
 }
 
-static void BUKDumpRuntime(void) {
-    if (gDidDump) return;
-
+static void BUKDumpRuntime(BOOL batteryPhase) {
     Class sh = NSClassFromString(@"SystemHealthUI");
     Class backend = NSClassFromString(@"PLBatteryUIBackendModel");
 
-    if (!sh && !backend) return;
-    gDidDump = YES;
+    if (batteryPhase) {
+        if (gDidBatteryDump || !backend) return;
+        gDidBatteryDump = YES;
+    } else {
+        if (gDidInitialDump || (!sh && !backend)) return;
+        gDidInitialDump = YES;
+    }
 
     NSDateFormatter *df = [NSDateFormatter new];
     df.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     BUKWrite(@"============================================================");
-    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug1 pid=%d time=%@",
+    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug2 phase=%@ pid=%d time=%@",\n              batteryPhase ? @"BATTERY_LOADED" : @"INITIAL",
               getpid(), [df stringFromDate:[NSDate date]]]);
 
     BUKWrite([NSString stringWithFormat:@"SystemHealthUI=%@ PLBatteryUIBackendModel=%@",
@@ -130,7 +133,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
                 BUKWrite([NSString stringWithFormat:@"IMAGE LOADED %s slide=%p",
                           info.dli_fname, (void *)slide]);
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    BUKDumpRuntime();
+                    BUKDumpRuntime(YES);
                 });
             }
         }
@@ -145,7 +148,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
 
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
-            BUKDumpRuntime();
+            BUKDumpRuntime(NO);
         });
     }
 }
