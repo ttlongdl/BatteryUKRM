@@ -6,4 +6,4 @@ Description: Runtime probe for BatteryUKRM development. Logs BatteryUsageUI Obje
 Maintainer: ttlongdl
 Author: ttlongdl
 Section: Tweaks
-Depends: mobilesubstrate, com.ttlongdl.batteryukrm (>= 1.0.1)
+Depends: mobilesubstrate
