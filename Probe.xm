@@ -9,7 +9,6 @@
 static NSString *const kLogPath = @"/var/mobile/BatteryUKRM-probe.log";
 static BOOL gDidInitialDump = NO;
 static BOOL gDidBatteryDump = NO;
-static BOOL gMGHookAttempted = NO;
 
 static void BUKWrite(NSString *line) {
     NSString *msg = [NSString stringWithFormat:@"%@\n", line ?: @""];
