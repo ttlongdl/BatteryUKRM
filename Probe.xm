@@ -12,6 +12,7 @@ static BOOL gDidBatteryDump = NO;
 static IMP gOrigBHSpecifiers = NULL;
 static IMP gOrigGetChargeCycles = NULL;
 static IMP gOrigInternalSpecifiers = NULL;
+static BOOL gDidDirectCycleProbe = NO;
 static BOOL gDidHookBatteryHealth = NO;
 
 static void BUKWrite(NSString *line) {
@@ -112,7 +113,7 @@ static void BUKDumpRuntime(BOOL batteryPhase) {
     NSDateFormatter *df = [NSDateFormatter new];
     df.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     BUKWrite(@"============================================================");
-    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug6 phase=%@ pid=%d time=%@",
+    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug7 phase=%@ pid=%d time=%@",
               batteryPhase ? @"BATTERY_LOADED" : @"INITIAL", getpid(), [df stringFromDate:[NSDate date]]]);
     BUKWrite([NSString stringWithFormat:@"SystemHealthUI=%@ PLBatteryUIBackendModel=%@",
               sh ? @"YES" : @"NO", backend ? @"YES" : @"NO"]);
@@ -183,6 +184,28 @@ static id BUK_BUI_setUpInternalSpecifiers(id self, SEL _cmd) {
     return result;
 }
 
+static void BUKDirectCycleProbe(void) {
+    if (gDidDirectCycleProbe) return;
+    gDidDirectCycleProbe = YES;
+    Class cls = NSClassFromString(@"BatteryUIController");
+    Method m = cls ? class_getInstanceMethod(cls, @selector(getChargeCycles:)) : NULL;
+    if (!m) {
+        BUKWrite(@"DIRECT CYCLE getChargeCycles: unavailable");
+        return;
+    }
+    IMP imp = method_getImplementation(m);
+    @try {
+        id obj = [[cls alloc] init];
+        id (*call)(id, SEL, id) = (id (*)(id, SEL, id))imp;
+        id value = call(obj, @selector(getChargeCycles:), nil);
+        BUKWrite([NSString stringWithFormat:@"DIRECT CYCLE nil-specifier -> %@ class=%@",
+                  value, value ? NSStringFromClass([value class]) : @"(nil)"]);
+    } @catch (NSException *e) {
+        BUKWrite([NSString stringWithFormat:@"DIRECT CYCLE EXCEPTION %@ reason=%@",
+                  e.name, e.reason]);
+    }
+}
+
 static void BUKInstallBatteryHealthHooks(void) {
     if (gDidHookBatteryHealth) return;
     Class cls = NSClassFromString(@"BatteryHealthUIController");
@@ -223,6 +246,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
                     BUKLogMGSymbol();
                     BUKInstallBatteryHealthHooks();
                     BUKDumpRuntime(YES);
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ BUKDirectCycleProbe(); });
                 });
             }
         }
