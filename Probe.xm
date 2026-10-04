@@ -10,8 +10,7 @@ static BOOL gDidInitialDump = NO;
 static BOOL gDidBatteryDump = NO;
 
 static void BUKWrite(NSString *line) {
-    NSString *msg = [NSString stringWithFormat:@"%@
-", line ?: @""];
+    NSString *msg = [NSString stringWithFormat:@"%@\\n", line ?: @""];
     NSData *data = [msg dataUsingEncoding:NSUTF8StringEncoding];
     NSFileManager *fm = [NSFileManager defaultManager];
 
