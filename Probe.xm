@@ -11,6 +11,7 @@ static BOOL gDidInitialDump = NO;
 static BOOL gDidBatteryDump = NO;
 static IMP gOrigBHSpecifiers = NULL;
 static IMP gOrigGetChargeCycles = NULL;
+static IMP gOrigInternalSpecifiers = NULL;
 static BOOL gDidHookBatteryHealth = NO;
 
 static void BUKWrite(NSString *line) {
@@ -111,7 +112,7 @@ static void BUKDumpRuntime(BOOL batteryPhase) {
     NSDateFormatter *df = [NSDateFormatter new];
     df.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     BUKWrite(@"============================================================");
-    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug4 phase=%@ pid=%d time=%@",
+    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug6 phase=%@ pid=%d time=%@",
               batteryPhase ? @"BATTERY_LOADED" : @"INITIAL", getpid(), [df stringFromDate:[NSDate date]]]);
     BUKWrite([NSString stringWithFormat:@"SystemHealthUI=%@ PLBatteryUIBackendModel=%@",
               sh ? @"YES" : @"NO", backend ? @"YES" : @"NO"]);
@@ -155,12 +156,30 @@ static id BUK_BH_specifiers(id self, SEL _cmd) {
     return result;
 }
 
-static id BUK_BH_getChargeCycles(id self, SEL _cmd, id specifier) {
+static id BUK_BUI_getChargeCycles(id self, SEL _cmd, id specifier) {
     id (*orig)(id, SEL, id) = (id (*)(id, SEL, id))gOrigGetChargeCycles;
     id result = orig ? orig(self, _cmd, specifier) : nil;
-    BUKWrite([NSString stringWithFormat:@"HOOK getChargeCycles: specifier=%@ name=%@ identifier=%@ -> %@",
-              specifier, BUKSafeValue(specifier, @"name"),
-              BUKSafeValue(specifier, @"identifier"), result]);
+    BUKWrite([NSString stringWithFormat:@"HOOK BatteryUIController getChargeCycles: specifier=%@ name=%@ identifier=%@ key=%@ -> %@",
+              specifier, BUKSafeValue(specifier, @"name"), BUKSafeValue(specifier, @"identifier"),
+              BUKSafeValue(specifier, @"key"), result]);
+    return result;
+}
+
+static id BUK_BUI_setUpInternalSpecifiers(id self, SEL _cmd) {
+    id (*orig)(id, SEL) = (id (*)(id, SEL))gOrigInternalSpecifiers;
+    id result = orig ? orig(self, _cmd) : nil;
+    BUKWrite([NSString stringWithFormat:@"HOOK BatteryUIController setUpInternalSpecifiers -> %@ count=%lu",
+              NSStringFromClass([result class]),
+              (unsigned long)([result respondsToSelector:@selector(count)] ? [result count] : 0)]);
+    if ([result isKindOfClass:[NSArray class]]) {
+        NSUInteger i = 0;
+        for (id sp in (NSArray *)result) {
+            BUKWrite([NSString stringWithFormat:@"  INTERNAL[%lu] class=%@ name=%@ identifier=%@ id=%@ key=%@ getter=%@",
+                      (unsigned long)i++, NSStringFromClass([sp class]),
+                      BUKSafeValue(sp, @"name"), BUKSafeValue(sp, @"identifier"),
+                      BUKSafeValue(sp, @"id"), BUKSafeValue(sp, @"key"), BUKSafeValue(sp, @"getter")]);
+        }
+    }
     return result;
 }
 
@@ -172,18 +191,25 @@ static void BUKInstallBatteryHealthHooks(void) {
         return;
     }
     Method m = class_getInstanceMethod(cls, @selector(specifiers));
-    Method c = class_getInstanceMethod(cls, @selector(getChargeCycles:));
     if (m) {
         gOrigBHSpecifiers = method_getImplementation(m);
         method_setImplementation(m, (IMP)BUK_BH_specifiers);
     }
+
+    Class bui = NSClassFromString(@"BatteryUIController");
+    Method c = bui ? class_getInstanceMethod(bui, @selector(getChargeCycles:)) : NULL;
+    Method internal = bui ? class_getInstanceMethod(bui, @selector(setUpInternalSpecifiers)) : NULL;
     if (c) {
         gOrigGetChargeCycles = method_getImplementation(c);
-        method_setImplementation(c, (IMP)BUK_BH_getChargeCycles);
+        method_setImplementation(c, (IMP)BUK_BUI_getChargeCycles);
     }
-    gDidHookBatteryHealth = (m || c);
-    BUKWrite([NSString stringWithFormat:@"HOOK INSTALL BatteryHealthUIController specifiers=%@ getChargeCycles=%@",
-              m ? @"YES" : @"NO", c ? @"YES" : @"NO"]);
+    if (internal) {
+        gOrigInternalSpecifiers = method_getImplementation(internal);
+        method_setImplementation(internal, (IMP)BUK_BUI_setUpInternalSpecifiers);
+    }
+    gDidHookBatteryHealth = (m || c || internal);
+    BUKWrite([NSString stringWithFormat:@"HOOK INSTALL BH.specifiers=%@ BUI.getChargeCycles=%@ BUI.internalSpecifiers=%@",
+              m ? @"YES" : @"NO", c ? @"YES" : @"NO", internal ? @"YES" : @"NO"]);
 }
 
 static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
