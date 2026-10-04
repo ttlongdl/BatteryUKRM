@@ -6,10 +6,12 @@
 #import <dispatch/dispatch.h>
 
 static NSString *const kLogPath = @"/var/mobile/BatteryUKRM-probe.log";
-static BOOL gDidInitialDump = NO;\nstatic BOOL gDidBatteryDump = NO;
+static BOOL gDidInitialDump = NO;
+static BOOL gDidBatteryDump = NO;
 
 static void BUKWrite(NSString *line) {
-    NSString *msg = [NSString stringWithFormat:@"%@\n", line ?: @""];
+    NSString *msg = [NSString stringWithFormat:@"%@
+", line ?: @""];
     NSData *data = [msg dataUsingEncoding:NSUTF8StringEncoding];
     NSFileManager *fm = [NSFileManager defaultManager];
 
@@ -92,7 +94,8 @@ static void BUKDumpRuntime(BOOL batteryPhase) {
     NSDateFormatter *df = [NSDateFormatter new];
     df.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     BUKWrite(@"============================================================");
-    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug2 phase=%@ pid=%d time=%@",\n              batteryPhase ? @"BATTERY_LOADED" : @"INITIAL",
+    BUKWrite([NSString stringWithFormat:@"BatteryUKRM Probe debug2 phase=%@ pid=%d time=%@",
+              batteryPhase ? @"BATTERY_LOADED" : @"INITIAL",
               getpid(), [df stringFromDate:[NSDate date]]]);
 
     BUKWrite([NSString stringWithFormat:@"SystemHealthUI=%@ PLBatteryUIBackendModel=%@",
