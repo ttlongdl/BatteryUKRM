@@ -52,21 +52,21 @@ static id BUKCycleValue(id self, SEL _cmd, id specifier) {
 }
 
 static id BUKMakeCycleSpecifier(id target, NSArray *existing) {
-    id template = nil;
+    id templateSpecifier = nil;
     for (id sp in existing) {
         NSString *name = nil;
         @try { name = [[sp valueForKey:@"name"] description]; } @catch (__unused NSException *e) {}
         if ([name containsString:@"Dung lượng tối đa"] || [name containsString:@"Maximum Capacity"]) {
-            template = sp;
+            templateSpecifier = sp;
             break;
         }
     }
-    if (!template) {
-        BUKWrite(@"DEBUG12 Maximum Capacity template not found");
+    if (!templateSpecifier) {
+        BUKWrite(@"DEBUG12 Maximum Capacity templateSpecifier not found");
         return nil;
     }
 
-    id sp = [template copy];
+    id sp = [templateSpecifier copy];
     @try {
         if ([sp respondsToSelector:@selector(setName:)])
             [sp performSelector:@selector(setName:) withObject:@"Số chu kỳ"];
@@ -88,7 +88,7 @@ static id BUKMakeCycleSpecifier(id target, NSArray *existing) {
             [sp performSelector:@selector(setProperty:forKey:) withObject:@"BatteryUKRMRealCycleCount" withObject:@"key"];
         }
     } @catch (NSException *e) {
-        BUKWrite([NSString stringWithFormat:@"DEBUG12 template configure exception=%@", e.name]);
+        BUKWrite([NSString stringWithFormat:@"DEBUG12 templateSpecifier configure exception=%@", e.name]);
         return nil;
     }
     BUKWrite(@"DEBUG12 cloned Maximum Capacity specifier");
