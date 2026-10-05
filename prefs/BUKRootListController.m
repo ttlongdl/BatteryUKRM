@@ -21,7 +21,6 @@ static NSString * const kBUKPrefsDomain = @"com.ttlongdl.batteryukrm";
     NSMutableArray *specifiers = [NSMutableArray array];
 
     PSSpecifier *header = [PSSpecifier groupSpecifierWithName:@"BatteryUKRM"];
-    [header setProperty:@YES forKey:@"isBold"];
     [header setProperty:[self localized:@"HIDE_REPAIR_DESC"] forKey:@"footerText"];
     [specifiers addObject:header];
 

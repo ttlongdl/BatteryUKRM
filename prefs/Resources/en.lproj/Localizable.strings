@@ -7,4 +7,4 @@
 "CYCLE_COUNT_DESC" = "Show the battery cycle count in Battery Health & Charging.";
 "RESPRING" = "Respring";
 "RESPRING_NOTE" = "Apply changes immediately with a respring.";
-"PACKAGE_FOOTER" = "BatteryUKRM 1.1.0 beta 4 • Rootless\ncom.ttlongdl.batteryukrm";
+"PACKAGE_FOOTER" = "BatteryUKRM 1.1.0 • Rootless\ncom.ttlongdl.batteryukrm";

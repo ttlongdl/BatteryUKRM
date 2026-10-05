@@ -1,6 +1,6 @@
 Package: com.ttlongdl.batteryukrm
 Name: BatteryUKRM
-Version: 1.1.0~beta4
+Version: 1.1.0
 Architecture: iphoneos-arm64
 Description: Configurable battery repair warning, Maximum Capacity, and cycle count features for replacement batteries.
 Maintainer: ttlongdl
