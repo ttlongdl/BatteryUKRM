@@ -1,6 +1,9 @@
 {
-    bundle = BatteryUKRMPrefs;
-    cell = PSLinkCell;
-    detail = BUKRootListController;
-    label = BatteryUKRM;
+    entry = {
+        bundle = BatteryUKRMPrefs;
+        cell = PSLinkCell;
+        detail = BUKRootListController;
+        isController = 1;
+        label = BatteryUKRM;
+    };
 }
