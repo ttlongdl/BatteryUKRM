@@ -1,0 +1,8 @@
+{
+    entry = {
+        bundle = BatteryUKRMPrefs;
+        cell = PSLinkCell;
+        detail = BUKRootListController;
+        label = BatteryUKRM;
+    };
+}
