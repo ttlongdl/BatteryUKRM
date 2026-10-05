@@ -2,7 +2,7 @@ name: Build BatteryUKRM
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, v1.1-settings ]
   workflow_dispatch:
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
-          name: BatteryUKRM-1.0.2
+          name: BatteryUKRM-v1.1-settings
           path: packages/*.deb
           if-no-files-found: error
           retention-days: 7
