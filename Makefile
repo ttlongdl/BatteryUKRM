@@ -9,4 +9,7 @@ BatteryUKRM_FILES = Tweak.xm
 BatteryUKRM_CFLAGS = -fobjc-arc
 BatteryUKRM_FRAMEWORKS = Foundation
 
+SUBPROJECTS += prefs
+
 include $(THEOS_MAKE_PATH)/tweak.mk
+include $(THEOS_MAKE_PATH)/aggregate.mk
