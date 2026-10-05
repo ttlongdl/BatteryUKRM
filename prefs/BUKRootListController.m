@@ -23,7 +23,7 @@ static NSString * const kBUKPrefsDomain = @"com.ttlongdl.batteryukrm";
     NSMutableArray *specifiers = [NSMutableArray array];
 
     PSSpecifier *header = [PSSpecifier groupSpecifierWithName:@"BatteryUKRM"];
-    [header setProperty:[self localized:@"SUBTITLE"] forKey:@"footerText"];
+    [header setProperty:[self localized:@"HIDE_REPAIR_DESC"] forKey:@"footerText"];
     [specifiers addObject:header];
 
     PSSpecifier *repair = [PSSpecifier preferenceSpecifierNamed:[self localized:@"HIDE_REPAIR_TITLE"]
@@ -32,7 +32,6 @@ static NSString * const kBUKPrefsDomain = @"com.ttlongdl.batteryukrm";
     [repair setProperty:@"HideRepairWarnings" forKey:@"key"];
     [repair setProperty:@YES forKey:@"default"];
     [repair setProperty:kBUKPrefsDomain forKey:@"defaults"];
-    [repair setProperty:[self localized:@"HIDE_REPAIR_DESC"] forKey:@"footerText"];
     [specifiers addObject:repair];
 
     PSSpecifier *capacityGroup = [PSSpecifier groupSpecifierWithName:@""];
@@ -90,10 +89,33 @@ static NSString * const kBUKPrefsDomain = @"com.ttlongdl.batteryukrm";
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
+- (BOOL)spawnExecutable:(NSString *)path arguments:(NSArray<NSString *> *)arguments {
+    if (![[NSFileManager defaultManager] isExecutableFileAtPath:path]) return NO;
+
+    NSMutableArray<NSString *> *allArgs = [NSMutableArray arrayWithObject:path];
+    [allArgs addObjectsFromArray:arguments];
+
+    char **argv = calloc(allArgs.count + 1, sizeof(char *));
+    if (!argv) return NO;
+
+    for (NSUInteger i = 0; i < allArgs.count; i++) {
+        argv[i] = strdup(allArgs[i].UTF8String);
+    }
+
+    pid_t pid = 0;
+    int status = posix_spawn(&pid, path.UTF8String, NULL, NULL, argv, environ);
+
+    for (NSUInteger i = 0; i < allArgs.count; i++) free(argv[i]);
+    free(argv);
+
+    return status == 0;
+}
+
 - (void)respring {
-    pid_t pid;
-    const char *args[] = {"killall", "-9", "SpringBoard", NULL};
-    posix_spawnp(&pid, "killall", NULL, NULL, (char * const *)args, environ);
+    if ([self spawnExecutable:@"/var/jb/usr/bin/sbreload" arguments:@[]]) return;
+    if ([self spawnExecutable:@"/usr/bin/sbreload" arguments:@[]]) return;
+    if ([self spawnExecutable:@"/var/jb/usr/bin/killall" arguments:@[@"-9", @"SpringBoard"]]) return;
+    [self spawnExecutable:@"/usr/bin/killall" arguments:@[@"-9", @"SpringBoard"]];
 }
 
 @end

@@ -1,10 +1,10 @@
 "SUBTITLE" = "Tiện ích pin dành cho pin đã thay thế.";
 "HIDE_REPAIR_TITLE" = "Ẩn cảnh báo sửa chữa pin";
-"HIDE_REPAIR_DESC" = "Ẩn cảnh báo sửa chữa pin và Linh kiện không xác định trong Cài đặt và Giới thiệu.";
+"HIDE_REPAIR_DESC" = "Ẩn cảnh báo sửa chữa pin trong Cài đặt và Giới thiệu.";
 "MAX_CAPACITY_TITLE" = "Khôi phục dung lượng tối đa";
 "MAX_CAPACITY_DESC" = "Khôi phục thông tin Dung lượng tối đa cho pin đã thay thế.";
 "CYCLE_COUNT_TITLE" = "Hiển thị số chu kỳ";
 "CYCLE_COUNT_DESC" = "Hiển thị số chu kỳ pin trong Tình trạng pin & Sạc.";
 "RESPRING" = "Respring";
-"RESPRING_NOTE" = "Các thay đổi cần respring để có hiệu lực.";
-"PACKAGE_FOOTER" = "BatteryUKRM 1.1.0 beta 1 • Rootless\ncom.ttlongdl.batteryukrm";
+"RESPRING_NOTE" = "Áp dụng các thay đổi ngay bằng respring.";
+"PACKAGE_FOOTER" = "BatteryUKRM 1.1.0 beta 2 • Rootless\ncom.ttlongdl.batteryukrm";
