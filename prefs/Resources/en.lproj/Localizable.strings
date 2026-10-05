@@ -1,0 +1,10 @@
+"SUBTITLE" = "Battery utility for replaced batteries.";
+"HIDE_REPAIR_TITLE" = "Hide Battery Repair Warnings";
+"HIDE_REPAIR_DESC" = "Hide battery repair and Unknown Part warnings from Settings and About.";
+"MAX_CAPACITY_TITLE" = "Restore Maximum Capacity";
+"MAX_CAPACITY_DESC" = "Restore Maximum Capacity information for replacement batteries.";
+"CYCLE_COUNT_TITLE" = "Show Cycle Count";
+"CYCLE_COUNT_DESC" = "Show the battery cycle count in Battery Health & Charging.";
+"RESPRING" = "Respring";
+"RESPRING_NOTE" = "Changes require a respring to take effect.";
+"PACKAGE_FOOTER" = "BatteryUKRM 1.1.0 beta 1 • Rootless\ncom.ttlongdl.batteryukrm";
