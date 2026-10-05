@@ -10,6 +10,23 @@ static BOOL gPrefsHooksInstalled = NO;
 static BOOL gBatteryHooksInstalled = NO;
 static BOOL gSpringBoardHookInstalled = NO;
 
+static NSString * const kBUKPrefsDomain = @"com.ttlongdl.batteryukrm";
+static BOOL gHideRepairWarnings = YES;
+static BOOL gRestoreMaximumCapacity = YES;
+static BOOL gShowCycleCount = YES;
+
+static BOOL BUKPreferenceBool(NSDictionary *prefs, NSString *key) {
+    id value = [prefs objectForKey:key];
+    return value ? [value boolValue] : YES;
+}
+
+static void BUKLoadPreferences(void) {
+    NSDictionary *prefs = [[NSUserDefaults standardUserDefaults] persistentDomainForName:kBUKPrefsDomain];
+    gHideRepairWarnings = BUKPreferenceBool(prefs, @"HideRepairWarnings");
+    gRestoreMaximumCapacity = BUKPreferenceBool(prefs, @"RestoreMaximumCapacity");
+    gShowCycleCount = BUKPreferenceBool(prefs, @"ShowCycleCount");
+}
+
 static void BUKReplaceInstanceMethod(Class cls, SEL sel, IMP replacement) {
     Method m = cls ? class_getInstanceMethod(cls, sel) : NULL;
     if (m) method_setImplementation(m, replacement);
@@ -223,8 +240,8 @@ static id BUK_BH_specifiers(id self, SEL _cmd) {
 
 // MARK: - Hook installation
 
-static void BUKInstallPreferencesHooks(void) {
-    if (gPrefsHooksInstalled) return;
+static void BUKInstallRepairWarningHooks(void) {
+    if (!gHideRepairWarnings || gPrefsHooksInstalled) return;
 
     Class prefs = NSClassFromString(@"PSUIPrefsListController");
     Class health = NSClassFromString(@"SystemHealthUI");
@@ -243,34 +260,38 @@ static void BUKInstallPreferencesHooks(void) {
     if (installed) gPrefsHooksInstalled = YES;
 }
 
-static void BUKInstallBatteryHooks(void) {
-    if (gBatteryHooksInstalled) return;
+static void BUKInstallMaximumCapacityHooks(void) {
+    if (!gRestoreMaximumCapacity || gBatteryHooksInstalled) return;
 
     Class resource = NSClassFromString(@"BatteryUIResourceClass");
     Class backend = NSClassFromString(@"PLBatteryUIBackendModel");
-    Class healthUI = NSClassFromString(@"BatteryHealthUIController");
 
-    if (!resource && !backend && !healthUI) return;
+    if (!resource && !backend) return;
 
     BUKReplaceClassMethod(resource, NSSelectorFromString(@"getBatteryHealthServiceState"), (IMP)BUK_ZeroState);
     BUKReplaceClassMethod(resource, NSSelectorFromString(@"genuineBatteryStatus"), (IMP)BUK_GenuineBatteryStatus);
     BUKReplaceClassMethod(resource, NSSelectorFromString(@"getManagementState"), (IMP)BUK_ManagementState);
     BUKReplaceClassMethod(backend, NSSelectorFromString(@"supportsChargingFixedLimit"), (IMP)BUK_SupportsChargingFixedLimit);
 
-    if (healthUI) {
-        Method m = class_getInstanceMethod(healthUI, @selector(specifiers));
-        if (m && !gOrigBHSpecifiers) {
-            class_addMethod(healthUI, @selector(buk_realCycleCount:), (IMP)BUKCycleValue, "@@:@");
-            gOrigBHSpecifiers = method_getImplementation(m);
-            method_setImplementation(m, (IMP)BUK_BH_specifiers);
-        }
-    }
-
     gBatteryHooksInstalled = YES;
 }
 
+static void BUKInstallCycleCountHooks(void) {
+    if (!gShowCycleCount || gOrigBHSpecifiers) return;
+
+    Class healthUI = NSClassFromString(@"BatteryHealthUIController");
+    if (!healthUI) return;
+
+    Method m = class_getInstanceMethod(healthUI, @selector(specifiers));
+    if (!m) return;
+
+    class_addMethod(healthUI, @selector(buk_realCycleCount:), (IMP)BUKCycleValue, "@@:@");
+    gOrigBHSpecifiers = method_getImplementation(m);
+    method_setImplementation(m, (IMP)BUK_BH_specifiers);
+}
+
 static void BUKInstallSpringBoardHook(void) {
-    if (gSpringBoardHookInstalled) return;
+    if (!gHideRepairWarnings || gSpringBoardHookInstalled) return;
 
     Class cls = NSClassFromString(@"SBApplication");
     Method m = cls ? class_getInstanceMethod(cls, @selector(badgeValue)) : NULL;
@@ -282,8 +303,9 @@ static void BUKInstallSpringBoardHook(void) {
 }
 
 static void BUKInstallAvailableHooks(void) {
-    BUKInstallPreferencesHooks();
-    BUKInstallBatteryHooks();
+    BUKInstallRepairWarningHooks();
+    BUKInstallMaximumCapacityHooks();
+    BUKInstallCycleCountHooks();
     BUKInstallSpringBoardHook();
 }
 
@@ -295,6 +317,7 @@ static void BUKImageAdded(const struct mach_header *mh, intptr_t slide) {
 
 %ctor {
     @autoreleasepool {
+        BUKLoadPreferences();
         BUKInstallAvailableHooks();
         _dyld_register_func_for_add_image(BUKImageAdded);
     }
