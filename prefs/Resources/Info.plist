@@ -1,0 +1,11 @@
+{
+    CFBundleDevelopmentRegion = en;
+    CFBundleDisplayName = BatteryUKRM;
+    CFBundleIdentifier = "com.ttlongdl.batteryukrm.preferences";
+    CFBundleInfoDictionaryVersion = "6.0";
+    CFBundleName = BatteryUKRMPrefs;
+    CFBundlePackageType = BNDL;
+    CFBundleShortVersionString = "1.1.0";
+    CFBundleVersion = "1.1.0";
+    NSPrincipalClass = BUKRootListController;
+}
