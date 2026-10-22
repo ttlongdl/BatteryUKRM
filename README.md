@@ -18,16 +18,22 @@
 
 All three features have **independent switches** in **Settings → Tweaks → BatteryUKRM** and are enabled by default. Tap **Respring** to apply changes. Disabled modules do not install their corresponding hooks.
 
-## Screenshots
+## Screenshots / Ảnh minh họa
 
-The tweak includes a native preference pane in **English and Vietnamese**. Example results: **Maximum Capacity: 100%** and **Cycle Count: 19** on the tested device. These are device readings shown in the screenshots, **not values forced by BatteryUKRM**.
+The screenshots below show the **rootless** build on the tested iPhone 12 Pro. BatteryUKRM-RH shares the same preference design, but these screenshots do **not** constitute separate Roothide 1.1.0 testing.
 
-<!-- Add the supplied screenshots to docs/screenshots/ with these names to display them here. -->
+Ảnh chụp từ bản **rootless** trên iPhone 12 Pro đã kiểm thử. Giao diện bản Roothide tương tự, nhưng các ảnh này **không** xác nhận bản Roothide 1.1.0 đã được kiểm thử độc lập.
+
 | English | Tiếng Việt |
-| --- | --- |
-| [Preferences](docs/screenshots/preferences-en.png) | [Tùy chọn](docs/screenshots/preferences-vi.png) |
-| [Battery Health](docs/screenshots/battery-health-en.png) | [Tình trạng pin](docs/screenshots/battery-health-vi.png) |
-| [Unknown Part warning (before)](docs/screenshots/unknown-part-en.png) | [Cảnh báo linh kiện (trước)](docs/screenshots/unknown-part-vi.png) |
+| :---: | :---: |
+| **Preferences / Tùy chọn** | **Tùy chọn / Preferences** |
+| <img src="docs/screenshots/IMG_0550.PNG" alt="BatteryUKRM preferences in English" width="290"> | <img src="docs/screenshots/IMG_0547.PNG" alt="Tùy chọn BatteryUKRM bằng tiếng Việt" width="290"> |
+| **Battery Health & Cycle Count** | **Tình trạng pin & Số chu kỳ** |
+| <img src="docs/screenshots/IMG_0549.PNG" alt="Maximum Capacity and Cycle Count in English" width="290"> | <img src="docs/screenshots/IMG_0546.PNG" alt="Dung lượng tối đa và số chu kỳ bằng tiếng Việt" width="290"> |
+| **Unknown Part warning (before)** | **Cảnh báo linh kiện (trước)** |
+| <img src="docs/screenshots/IMG_0548.PNG" alt="Unknown Part warning in English before hiding" width="290"> | <img src="docs/screenshots/IMG_0545.PNG" alt="Cảnh báo linh kiện không xác định trước khi ẩn" width="290"> |
+
+**Note:** The displayed **100% Maximum Capacity** and **19 cycles** are readings on the test device, not hard-coded or forced values.
 
 ## Tested configuration
 
