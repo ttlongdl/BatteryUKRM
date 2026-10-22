@@ -56,6 +56,52 @@ Install the rootless BatteryUKRM package through your preferred compatible packa
 
 Upgrading from **1.0.2** to **1.1.0** preserves the previous default behavior: all three switches start enabled.
 
+## Frequently Asked Questions (FAQ)
+
+### How can I hide the “Unknown Part” battery warning on a jailbroken iPhone?
+On a compatible **rootless** jailbreak, install BatteryUKRM and enable **Hide Battery Repair Warnings** under **Settings → Tweaks → BatteryUKRM**, then respring. This hides battery-related warnings in Settings; it **does not authenticate** the replacement battery.
+
+### Can I restore Battery Health / Maximum Capacity after an iPhone battery replacement?
+The **Restore Maximum Capacity** module can restore the native Maximum Capacity presentation on supported device/iOS combinations. It does **not** improve the physical battery capacity or guarantee an accurate percentage on every device.
+
+### How can I show the real battery cycle count on an older iPhone?
+Enable **Show Cycle Count** in BatteryUKRM and respring. The tweak reads `CycleCount` from `AppleSmartBattery`; it does not fabricate a cycle count. Results depend on iOS compatibility.
+
+### Do I need to transplant the original battery BMS or flex cable?
+The tweak was verified on an **iPhone 12 Pro, iOS 17.0, Dopamine rootless**, with a replacement Apple battery **without transplanting the original BMS/flex**. Other device/battery combinations have not all been verified.
+
+### Does BatteryUKRM support Dopamine rootless, Roothide, or every iOS 17 version?
+This repository provides the **rootless** package (`com.ttlongdl.batteryukrm`), tested on **Dopamine rootless, iOS 17.0**. A separate [BatteryUKRM-RH repository](https://github.com/ttlongdl/BatteryUKRM-RH) provides a **Roothide** build. Do not assume every iOS 17 release is compatible.
+
+### Why is Maximum Capacity stuck on a loading spinner on iOS 17.7?
+A real-device report indicates a compatibility issue with **Restore Maximum Capacity** on iOS 17.7, while **Show Cycle Count** still worked. Disable **Restore Maximum Capacity** and respring. This is not by itself evidence of a faulty battery.
+
+### Can BatteryUKRM hide the “Unknown Part” warning for a replaced display?
+Display-replacement warnings are **not a verified feature**. BatteryUKRM is focused on battery information.
+
+## Câu hỏi thường gặp (FAQ tiếng Việt)
+
+### Cách ẩn cảnh báo “Linh kiện không xác định” sau khi thay pin iPhone jailbreak?
+Trên iPhone **jailbreak rootless** tương thích, cài BatteryUKRM, bật **Ẩn cảnh báo sửa chữa pin** tại **Cài đặt → Tweaks → BatteryUKRM**, rồi **Respring**. Tweak chỉ ẩn cảnh báo liên quan đến pin trong giao diện, **không xác thực linh kiện thay thế**.
+
+### Thay pin iPhone có khôi phục được Tình trạng pin / Dung lượng tối đa không?
+Module **Khôi phục dung lượng tối đa** có thể khôi phục giao diện hiển thị trên một số thiết bị/iOS tương thích. Tweak **không làm tăng dung lượng thực tế** hoặc bảo đảm số phần trăm chính xác trên mọi máy.
+
+### Làm sao hiện số chu kỳ sạc pin thực tế trên iPhone đời cũ?
+Bật **Hiển thị số chu kỳ** trong BatteryUKRM rồi respring. Tweak đọc `CycleCount` từ `AppleSmartBattery`, không tự tạo số chu kỳ giả.
+
+### Thay pin có cần chuyển mạch BMS/flex pin gốc không?
+Bản rootless đã được kiểm thử trên **iPhone 12 Pro, iOS 17.0, Dopamine**, dùng pin Apple thay thế **không chuyển BMS/flex pin gốc**. Không nên suy rộng kết quả sang mọi thiết bị.
+
+### BatteryUKRM hỗ trợ Dopamine rootless hay Roothide?
+Repo này dành cho **rootless / Dopamine**. Nếu dùng **Roothide**, xem repo riêng [BatteryUKRM-RH](https://github.com/ttlongdl/BatteryUKRM-RH). Chưa xác nhận tương thích với mọi phiên bản iOS 17.
+
+### Tại sao iOS 17.7 bị xoay vòng ở mục Dung lượng tối đa?
+Có báo cáo lỗi tương thích ở module **Khôi phục dung lượng tối đa** trên iOS 17.7. Thử tắt module đó rồi respring; số chu kỳ vẫn hoạt động trong trường hợp được báo cáo.
+
+### Tweak có ẩn cảnh báo màn hình không chính hãng không?
+**Chưa xác minh.** BatteryUKRM chỉ tập trung vào cảnh báo và thông tin **pin**.
+
 ## Tiếng Việt
 
 **BatteryUKRM** là tweak miễn phí dành cho iPhone **jailbreak rootless**, tập trung vào việc khôi phục cách hiển thị thông tin pin sau khi thay pin, đồng thời ẩn các cảnh báo linh kiện pin không xác định trong Cài đặt.
