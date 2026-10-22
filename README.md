@@ -1,57 +1,86 @@
 # BatteryUKRM
 
-BatteryUKRM is a **rootless jailbreak tweak** for iOS that restores useful Battery Health information on supported replaced-battery configurations while keeping each feature independently configurable.
+**English** | [Tiếng Việt](#tiếng-việt)
 
-Package: `com.ttlongdl.batteryukrm`
+**BatteryUKRM** is a free rootless jailbreak tweak for iPhones with replacement batteries. It can hide battery-related **Unknown Part / Repair Needed** warnings, restore the native **Maximum Capacity** display on supported devices, and show the **real battery cycle count** in Settings.
 
-## BatteryUKRM 1.1.0
+**Version:** 1.1.0 · **Package:** `com.ttlongdl.batteryukrm` · **Jailbreak:** Rootless
 
-Version 1.1.0 turns the original all-or-nothing tweak into three independent modules:
+> BatteryUKRM changes how battery information and warnings appear in iOS Settings. It does **not** repair a battery, authenticate replacement parts, or improve physical battery capacity. Compatibility depends on the device and iOS version.
 
-- **Hide Battery Repair Warnings** — hides battery-related “Unknown Part / Repair Needed” information in Settings and About and suppresses the Settings repair badge.
-- **Restore Maximum Capacity** — restores the native Maximum Capacity / Battery Health state on supported replacement batteries.
-- **Show Cycle Count** — reads the real `CycleCount` value from `AppleSmartBattery` and displays it in Battery Health & Charging.
+## Features
 
-All three modules are **enabled by default**, preserving the behavior of BatteryUKRM 1.0.2 after upgrading. A respring is required after changing switches.
+| Feature | What it does |
+| --- | --- |
+| **Hide Battery Repair Warnings** | Hides battery-related “Unknown Part / Repair Needed” messages in Settings and About, including the Settings repair badge. |
+| **Restore Maximum Capacity** | Restores the native Maximum Capacity / Battery Health presentation for supported replacement batteries. |
+| **Show Cycle Count** | Reads the actual `CycleCount` from `AppleSmartBattery` and displays it in Battery Health & Charging. |
 
-### New in 1.1.0
+All three features have **independent switches** in **Settings → Tweaks → BatteryUKRM** and are enabled by default. Tap **Respring** to apply changes. Disabled modules do not install their corresponding hooks.
 
-- Added a native Settings preference pane under **Settings → Tweaks → BatteryUKRM**.
-- Added independent switches for repair warnings, Maximum Capacity and Cycle Count.
-- Added a working **Respring** button.
-- Added Vietnamese and English localization based on the system language.
-- Added the BatteryUKRM preference icon.
-- Refactored hook installation so a disabled module does **not install its corresponding hooks**. This makes compatibility testing and troubleshooting much easier without uninstalling the whole tweak.
-- Keeps the real Cycle Count implementation introduced in 1.0.2.
+## Screenshots
 
-## Compatibility and known issues
+The tweak includes a native preference pane in **English and Vietnamese**. Example results: **Maximum Capacity: 100%** and **Cycle Count: 19** on the tested device. These are device readings shown in the screenshots, **not values forced by BatteryUKRM**.
 
-BatteryUKRM relies on private iOS Battery Health / Settings classes. Apple can change these implementations between iOS versions, so behavior is not guaranteed to be identical on every release.
-
-> **iOS 17.7 known compatibility issue:** a real-device report showed that the **Maximum Capacity** portion may fail to hook correctly and can leave the Maximum Capacity area loading/spinning or unavailable. The **Cycle Count** module was still able to display the reported cycle count on that device. If this occurs, disable **Restore Maximum Capacity**, keep the other desired modules enabled, and respring. This is one of the reasons the features are separated in 1.1.0.
-
-This should be treated as a compatibility limitation rather than evidence that the battery itself is faulty.
+<!-- Add the supplied screenshots to docs/screenshots/ with these names to display them here. -->
+| English | Tiếng Việt |
+| --- | --- |
+| [Preferences](docs/screenshots/preferences-en.png) | [Tùy chọn](docs/screenshots/preferences-vi.png) |
+| [Battery Health](docs/screenshots/battery-health-en.png) | [Tình trạng pin](docs/screenshots/battery-health-vi.png) |
+| [Unknown Part warning (before)](docs/screenshots/unknown-part-en.png) | [Cảnh báo linh kiện (trước)](docs/screenshots/unknown-part-vi.png) |
 
 ## Tested configuration
-
-BatteryUKRM has been confirmed working on:
 
 - **Device:** iPhone 12 Pro
 - **iOS:** 17.0
 - **Jailbreak:** Dopamine rootless
-- **Battery:** replaced with an Apple battery
-- **Battery BMS/flex:** original battery BMS/flex was **not transplanted** to the replacement battery
+- **Battery:** Replacement Apple battery, **without transplanting the original battery BMS/flex**
 
-Additional community testing has confirmed the Cycle Count feature on other devices/configurations as well.
+Other combinations may behave differently. A successful test on one device does not imply universal iOS support.
 
-## Upgrading from 1.0.2
+### Known limitation: iOS 17.7
 
-Install 1.1.0 over 1.0.2 normally. The three new options default to ON, so existing behavior is retained unless you disable a module.
+A real-device report indicates that **Restore Maximum Capacity** may fail on iOS 17.7, leaving that section loading or unavailable. **Show Cycle Count** still worked in that report. If affected, turn **Restore Maximum Capacity** off and respring; the other modules can remain enabled.
 
-If a Battery Health feature behaves incorrectly on your iOS version, use the switches to isolate the affected module before reporting the issue.
+**Display/screen repairs:** BatteryUKRM targets battery-related information. Hiding display-replacement warnings is not a verified feature.
 
-## Display / screen replacement
+## Installation and upgrades
 
-BatteryUKRM is focused on **battery-related** repair information. Display/screen replacement behavior has not been validated, and no claim is made that the tweak hides or modifies replaced-display information.
+Install the rootless BatteryUKRM package through your preferred compatible package manager, using a release package from this repository. After installation, open **Settings → Tweaks → BatteryUKRM**, select your options, then **Respring**.
 
-The repair-warning hooks may incidentally affect other repair information, but such behavior should be considered untested.
+Upgrading from **1.0.2** to **1.1.0** preserves the previous default behavior: all three switches start enabled.
+
+## Tiếng Việt
+
+**BatteryUKRM** là tweak miễn phí dành cho iPhone **jailbreak rootless**, tập trung vào việc khôi phục cách hiển thị thông tin pin sau khi thay pin, đồng thời ẩn các cảnh báo linh kiện pin không xác định trong Cài đặt.
+
+**Phiên bản:** 1.1.0 · **Package:** `com.ttlongdl.batteryukrm`
+
+> Tweak chỉ thay đổi cách iOS **hiển thị** thông tin và cảnh báo liên quan đến pin. Tweak **không sửa chữa pin**, không xác thực linh kiện thay thế và không làm tăng dung lượng thực tế của pin.
+
+### Tính năng
+
+| Tính năng | Mô tả |
+| --- | --- |
+| **Ẩn cảnh báo sửa chữa pin** | Ẩn cảnh báo “Linh kiện không xác định / Cần sửa chữa” liên quan đến pin trong Cài đặt và Giới thiệu, bao gồm biểu tượng cảnh báo sửa chữa. |
+| **Khôi phục dung lượng tối đa** | Khôi phục mục Dung lượng tối đa / Tình trạng pin trên các cấu hình thay pin tương thích. |
+| **Hiển thị số chu kỳ** | Đọc giá trị `CycleCount` thực từ `AppleSmartBattery` và hiển thị trong Tình trạng pin & Sạc. |
+
+Ba tính năng có **công tắc riêng**, mặc định đều bật. Vào **Cài đặt → Tweaks → BatteryUKRM**, chọn tính năng cần dùng rồi nhấn **Respring**. Khi tắt một module, tweak sẽ không cài đặt các hook tương ứng của module đó.
+
+Giao diện tùy chọn hỗ trợ **tiếng Việt và tiếng Anh** theo ngôn ngữ hệ thống.
+
+### Thiết bị đã kiểm tra
+
+- **iPhone 12 Pro**, **iOS 17.0**, **Dopamine rootless**
+- Đã thay bằng pin Apple khác, **không chuyển mạch BMS/flex của pin gốc**
+
+**Lưu ý iOS 17.7:** Có báo cáo thực tế cho thấy mục **Khôi phục dung lượng tối đa** có thể không hoạt động và bị xoay tải. Trong trường hợp này, hãy tắt riêng tính năng đó rồi respring. Tính năng hiển thị số chu kỳ vẫn hoạt động trên thiết bị được báo cáo.
+
+**Màn hình thay thế:** Chưa xác minh khả năng ẩn cảnh báo liên quan đến màn hình. BatteryUKRM chỉ tập trung vào thông tin **pin**.
+
+### Cài đặt / Nâng cấp
+
+Cài gói **rootless** từ bản phát hành của repository bằng trình quản lý gói tương thích. Sau đó mở **Cài đặt → Tweaks → BatteryUKRM** và respring để áp dụng.
+
+Nâng cấp từ **1.0.2** lên **1.1.0** sẽ giữ hành vi mặc định trước đây vì cả ba tính năng đều được bật sẵn.
